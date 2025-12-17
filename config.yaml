@@ -1,0 +1,108 @@
+# CONFIGURACION DEL ENTORNO
+environment:
+  name: "DEV" # DEV, QA, PROD
+  master: "local[*]" 
+
+# PARAMETROS DE EJECUCION DEL JOB
+run_parameters:
+  start_date: "2024-12-01" # Formato YYYY-MM-DD
+  end_date: "2025-07-30" # Formato YYYY-MM-DD
+  output_base_path: "data/processed" 
+  date_filter_column: "fecha_proceso" 
+  country_filter_column: "pais"
+  country_filter_value: "TODOS"
+  partition_columns: 
+    - fecha_proceso
+    - pais
+
+# CONFIGURACION DE DATOS DE ENTRADA
+input_data:
+  file_path: "data/raw"
+  file_format: "csv"
+  options:
+    header: True
+    inferSchema: True
+
+# PARAMETROS DE CALIDAD DE DATOS 
+data_quality:
+  input:
+    min_expected_rows: 10
+    required_columns:
+      - pais
+      - fecha_proceso
+      - precio
+      - material
+  output:
+    not_nulls:
+      - precio
+      - material
+
+# PARAMETROS DE COLUMNAS DERIVADAS
+derived_cols:
+  col1:
+    source: "tipo_entrega"
+    name: "entrega_rutina"
+    conditions:
+      - ZPRE
+      - ZVE1
+  col2:
+    source: "tipo_entrega"
+    name: "entrega_bonificada"
+    conditions:
+      - Z04
+      - Z05
+
+# PARAMETROS DE TRATAMIENTO DE NULOS
+data_filling:
+  text:
+    columns:
+      - material
+    value: "NOT INFO"
+  number:
+    columns:
+      - precio
+    value: 0
+
+# PARAMETROS DE CONVERSION A UNIDADES
+unit_conversion:
+  quantity:
+    new_name: "cantidad_estandar"
+    name: "cantidad"
+  price:
+    new_name: "precio_estandar"
+    name: "precio"
+  unit:
+    new_name: "unidad_estandar"
+    new_value: "ST"
+    name: "unidad"
+    value: "CS"
+    factor: 20
+
+# PARAMETROS DE NUEVAS COLUMNAS PROPUESTAS
+additional_fields:
+  total: "total_estandar"
+  file: "filename"
+
+# PARAMETROS DE ORDENAMIENTO DE COLUMNAS
+columns_config:
+  columns_order:
+    - fecha_proceso
+    - pais
+    - material
+    - transporte
+    - ruta
+    - tipo_entrega
+    - entrega_rutina
+    - entrega_bonificada
+    - precio_origen
+    - cantidad_origen
+    - unidad_origen
+    - precio_estandar
+    - cantidad_estandar
+    - unidad_estandar
+    - total_estandar
+    - filename
+  columns_rename:
+    precio: "precio_origen"
+    cantidad: "cantidad_origen"
+    unidad: "unidad_origen"
