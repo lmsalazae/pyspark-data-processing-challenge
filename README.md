@@ -1,15 +1,15 @@
 # Pipeline de Procesamiento de Datos PySpark
-Este desarrollo de PySpark implementa un pipeline ETL (Extract, Transform, Load) para procesar datos, utilizando un archivo de configuración en formato YAML y el paquete OmegaConf para gestionar parámetros de entorno, ejecución, entrada/salida y reglas de negocio.
+Este desarrollo de PySpark implementa un pipeline ETL (Extract, Transform, Load) para procesar datos, utilizando un archivo de configuracion en formato YAML y el paquete OmegaConf para gestionar parámetros de entorno, ejecucion, entrada/salida y reglas de negocio.
 
-## Estructura y Elementos del Archivo de Configuración (config.yaml) (H2)
-El archivo config.yaml es el corazón del pipeline, ya que define todos los parámetros y reglas que guían el procesamiento de los datos.
+## Estructura y Elementos del Archivo de Configuracion (config.yaml) (H2)
+El archivo config.yaml es el corazon del pipeline, ya que define todos los parámetros y reglas que guían el procesamiento de los datos.
 
 ### CONFIGURACION DEL ENTORNO (environment)
-Define el entorno de ejecución del job.
+Define el entorno de ejecucion del job.
 
-	* name: Nombre del entorno de ejecución (ej. "DEV", "QA", "PROD").
+	* name: Nombre del entorno de ejecucion (ej. "DEV", "QA", "PROD").
 
-	* master: Configuración del maestro de Spark (ej. "local[\*]" para ejecución local).
+	* master: Configuracion del maestro de Spark (ej. "local[\*]" para ejecucion local).
 
 ### PARAMETROS DE EJECUCION DEL JOB (run_parameters)
 Configura los parámetros clave para el ciclo de vida del job.
@@ -27,7 +27,7 @@ Configura los parámetros clave para el ciclo de vida del job.
 	* partition_columns: Columnas a usar para particionar los datos al escribir la salida.
 
 ### CONFIGURACION DE DATOS DE ENTRADA (input_data)
-Especifica cómo leer los datos de origen.
+Especifica como leer los datos de origen.
 
 	* file_path: Directorio donde se encuentran los archivos de datos de entrada.
 
@@ -35,12 +35,14 @@ Especifica cómo leer los datos de origen.
 
 	* options: Opciones de lectura específicas del formato (ej. header: True, inferSchema: True).
 
+	* schema: Configuracion del esquema a ser usado al momento de la lectura.
+
 ### PARAMETROS DE CALIDAD DE DATOS (data_quality)
 Define las reglas de calidad de datos para la entrada y la salida.
 
 	* input: Reglas para los datos de entrada.
 
-	* min_expected_rows: Mínimo de filas esperadas para aprobar la validación de conteo.
+	* min_expected_rows: Mínimo de filas esperadas para aprobar la validacion de conteo.
 
 	* required_columns: Lista de columnas que deben estar presentes.
 
@@ -53,7 +55,7 @@ Reglas para crear nuevas columnas binarias (indicadoras).
 
 	* col1 / col2: Cada bloque define una nueva columna.
 
-	* source: Columna de origen para aplicar la condición.
+	* source: Columna de origen para aplicar la condicion.
 
 	* name: Nombre de la nueva columna derivada.
 
@@ -62,34 +64,34 @@ Reglas para crear nuevas columnas binarias (indicadoras).
 ### PARAMETROS DE TRATAMIENTO DE NULOS (data_filling)
 Define los valores para rellenar los datos nulos.
 
-	* text: Configuración para rellenar columnas de tipo texto.
+	* text: Configuracion para rellenar columnas de tipo texto.
 
 	* columns: Lista de columnas de texto a rellenar.
 
 	* value: Valor de relleno para columnas de texto (ej. "NOT INFO").
 
-	* number: Configuración para rellenar columnas de tipo numérico.
+	* number: Configuracion para rellenar columnas de tipo numérico.
 
 	* columns: Lista de columnas numéricas a rellenar.
 
 	* value: Valor de relleno para columnas numéricas (ej. 0).
 
 ### PARAMETROS DE CONVERSION A UNIDADES (unit_conversion)
-Reglas para la estandarización de unidades (conversión).
+Reglas para la estandarizacion de unidades (conversion).
 
-	* quantity / price / unit: Bloques para configurar la conversión de campos relacionados.
+	* quantity / price / unit: Bloques para configurar la conversion de campos relacionados.
 
 	* name: Nombre de la columna original.
 
 	* new_name: Nombre de la nueva columna estandarizada.
 
-	* unit (para conversión):
+	* unit (para conversion):
 
 	* value: Unidad original a convertir (ej. "CS").
 
 	* new_value: Nueva unidad estandarizada (ej. "ST").
 
-	* factor: Factor de conversión aplicado a cantidad y precio.
+	* factor: Factor de conversion aplicado a cantidad y precio.
 
 ### PARAMETROS DE NUEVAS COLUMNAS PROPUESTAS (additional_fields)
 Define los nombres de columnas adicionales que se proponen como datos utiles.
@@ -101,7 +103,7 @@ El total precalcula una operacion bastante util con los campos calculados previa
 	* file: Nombre para la columna que capturará el nombre del archivo de origen (ej. "filename").
 
 ### PARAMETROS DE ORDENAMIENTO DE COLUMNAS (columns_config)
-Define cómo deben quedar las columnas en la salida.
+Define como deben quedar las columnas en la salida.
 Se proponen nuevos nombres para algunas columnas, de tal manera que todo el dataset se puede entender mejor.
 Se propone tambien un nuevo orden en las columnas del dataset con el mismo objetivo.
 
@@ -109,33 +111,55 @@ Se propone tambien un nuevo orden en las columnas del dataset con el mismo objet
 
 	* columns_rename: Mapeo de columnas para renombrar (campos utilizados para preservar el valor original antes de la estandarizacion).
 
-## Descripción de Funciones del Script PySpark (data_process.py)
+### PARAMETROS DE CONFIGURACION DE LOGGING (logging)
+Define la comfiguracion para el logging centralizado.
+
+	* log_file: Ruta y nombre del archivo donde se registrarán los eventos.
+
+	* log_level: Nivel mínimo de mensajes a registrar (ej. "INFO", "ERROR").
+
+## Descripcion de Funciones del Script PySpark (data_process.py)
 El script está modularizado en funciones, cada una con una responsabilidad específica dentro del pipeline.
 
-### 1. setup_environment(conf: OmegaConf) -> SparkSession
-Tarea: Inicializa la sesión de Spark utilizando los parámetros definidos en la sección environment del archivo de configuración.
+### 1. setup_logging(conf: OmegaConf) -> logging.Logger
+Tarea: Inicializa y configura el sistema de logging de Python antes de iniciar la sesion de Spark.
 
-#### Acciones Clave: (H4)
+#### Acciones Clave:
 
-	* Crea el nombre de la aplicación a partir del nombre del entorno.
+	* Lee los parámetros log_file y log_level del config.yaml.
 
-	* Establece la configuración del maestro (ej. local[\*]).
+	* Crea el directorio del log si no existe, previniendo errores de FileNotFoundError al intentar configurar el manejador de archivo.
+
+	* Configura dos handlers: uno para escribir en el archivo de log (modo append) y otro para mostrar la salida en la consola (sys.stdout).
+
+	* Devuelve una instancia configurada del logging.Logger.
+
+### 2. setup_environment(conf: OmegaConf) -> SparkSession
+Tarea: Inicializa la sesion de Spark utilizando los parámetros definidos en la seccion environment del archivo de configuracion.
+
+#### Acciones Clave:
+
+	* Crea el nombre de la aplicacion a partir del nombre del entorno.
+
+	* Establece la configuracion del maestro (ej. local[\*]).
 
 	* Establece el nivel de log de Spark a "ERROR" para evitar verbosidad excesiva.
 
-### 2. read_data(spark: SparkSession, conf: OmegaConf) -> DataFrame
+### 3. read_data(spark: SparkSession, conf: OmegaConf) -> DataFrame
 Tarea: Carga los datos de entrada desde la ruta especificada.
 
-#### Acciones Clave: (H4)
+#### Acciones Clave:
 
-	* Lee los datos basándose en la configuración de input_data (ruta, formato, opciones).
+	* Implementa la contruccion del esquema (StructType) a partir de la configuración para la lectura de los datos.
+
+	* Lee los datos basándose en la configuracion de input_data (ruta, formato, opciones).
 
 	* Añade una columna (cuyo nombre se define en additional_fields.file) para capturar el nombre del archivo de origen (input_file_name()), extrayendo solo el nombre del archivo de la ruta completa usando regex.
 
-### 3. data_quality_input(df: DataFrame, conf: OmegaConf) -> bool
+### 4. data_quality_input(df: DataFrame, conf: OmegaConf) -> bool
 Tarea: Ejecuta las validaciones de calidad de datos para la entrada.
 
-#### Acciones Clave: (H4)
+#### Acciones Clave:
 
 	* Verifica que el conteo de filas (df.count()) sea mayor o igual a min_expected_rows.
 
@@ -143,7 +167,7 @@ Tarea: Ejecuta las validaciones de calidad de datos para la entrada.
 
 	* Retorna True si todas las validaciones son exitosas, False en caso contrario.
 
-### 4. transform_data(df: DataFrame, conf: OmegaConf) -> DataFrame
+### 5. transform_data(df: DataFrame, conf: OmegaConf) -> DataFrame
 Tarea: Orquesta y aplica la secuencia completa de transformaciones y reglas de negocio.
 
 #### Acciones Clave:
@@ -164,7 +188,7 @@ Tarea: Orquesta y aplica la secuencia completa de transformaciones y reglas de n
 
 	* Trata los valores nulos (fix_nulls).
 
-	* Aplica la conversión de unidades (treatment_units).
+	* Aplica la conversion de unidades (treatment_units).
 
 	* Calcula la columna total estándar (total_estandar) como cantidad_estandar * precio_estandar.
 
@@ -177,14 +201,14 @@ Tarea: Orquesta y aplica la secuencia completa de transformaciones y reglas de n
 
 	* delivery_filter(df: DataFrame, conf: OmegaConf) -> DataFrame: Filtra la data uniendo las filas que cumplen las condiciones de derived_cols.col1 o derived_cols.col2.
 
-#### Funciones de Transformación (Subprocesos de transform_data)
-	* derived_cols(df: DataFrame, conf: OmegaConf) -> DataFrame: Crea las columnas binarias de indicador (entrega_rutina, entrega_bonificada) usando la función when de Spark.
+#### Funciones de Transformacion (Subprocesos de transform_data)
+	* derived_cols(df: DataFrame, conf: OmegaConf) -> DataFrame: Crea las columnas binarias de indicador (entrega_rutina, entrega_bonificada) usando la funcion when de Spark.
 
-	* fix_nulls(df: DataFrame, conf: OmegaConf) -> DataFrame: Rellena los valores nulos (na.fill) según la configuración de data_filling para columnas de texto y numéricas.
+	* fix_nulls(df: DataFrame, conf: OmegaConf) -> DataFrame: Rellena los valores nulos (na.fill) según la configuracion de data_filling para columnas de texto y numéricas.
 
-	* treatment_units(df: DataFrame, conf: OmegaConf) -> DataFrame: Aplica la lógica de estandarización de unidades:
+	* treatment_units(df: DataFrame, conf: OmegaConf) -> DataFrame: Aplica la logica de estandarizacion de unidades:
 
-		- Si unidad es igual al value de conversión (ej. "CS"), aplica el factor:
+		- Si unidad es igual al value de conversion (ej. "CS"), aplica el factor:
 
 			* cantidad_estandar = cantidad_origen * factor.
 
@@ -194,7 +218,7 @@ Tarea: Orquesta y aplica la secuencia completa de transformaciones y reglas de n
 
 	* rename_and_order_cols(df: DataFrame, conf: OmegaConf) -> DataFrame: Renombra las columnas originales a nombres de respaldo (ej. precio a precio_origen) y luego selecciona las columnas en el orden final definido en columns_order.
 
-### 5. data_quality_output(df: DataFrame, conf: OmegaConf) -> bool
+### 6. data_quality_output(df: DataFrame, conf: OmegaConf) -> bool
 Tarea: Ejecuta las validaciones de calidad de datos para la salida.
 
 #### Acciones Clave: (H4)
@@ -203,8 +227,8 @@ Tarea: Ejecuta las validaciones de calidad de datos para la salida.
 
 	* Retorna True si todas las validaciones son exitosas, False en caso contrario.
 
-### 6. write_data(df: DataFrame, conf: OmegaConf) -> None
-Tarea: Escribe el DataFrame procesado en la ubicación de salida.
+### 7. write_data(df: DataFrame, conf: OmegaConf) -> None
+Tarea: Escribe el DataFrame procesado en la ubicacion de salida.
 
 #### Acciones Clave:
 
@@ -214,18 +238,20 @@ Tarea: Escribe el DataFrame procesado en la ubicación de salida.
 
 	* Particiona los datos según las columnas definidas en partition_columns.
 
-	* La ruta de salida es una combinación de output_base_path y el nombre del entorno.
+	* La ruta de salida es una combinacion de output_base_path y el nombre del entorno.
 
-### 7. main() -> None
-Tarea: Función principal que gestiona el flujo de ejecución.
+### 8. main() -> None
+Tarea: Funcion principal que gestiona el flujo de ejecucion.
 
 #### Acciones Clave:
 
-	* Carga la configuración (OmegaConf.load).
+	* Carga la configuracion (OmegaConf.load).
+
+	* Configura el logging.
 
 	* Sigue el flujo secuencial: setup_environment -> read_data.
 
-	* Aplica data_quality_input y solo procede a la transformación si se aprueba.
+	* Aplica data_quality_input y solo procede a la transformacion si se aprueba.
 
 	* Si se aprueba, aplica transform_data.
 
@@ -233,4 +259,4 @@ Tarea: Función principal que gestiona el flujo de ejecución.
 
 	* Si se aprueba, aplica write_data.
 
-	* Detiene la sesión de Spark al finalizar o en caso de error (finally).
+	* Detiene la sesion de Spark al finalizar o en caso de error (finally).

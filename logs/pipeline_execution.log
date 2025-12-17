@@ -1,0 +1,104 @@
+2025-12-17 10:21:08,914 | INFO | main | Pipeline de procesamiento de datos iniciado
+2025-12-17 10:21:11,312 | INFO | _init_num_threads | NumExpr defaulting to 8 threads.
+2025-12-17 10:21:16,046 | INFO | setup_environment | --- Sesion Spark iniciada en entorno: PROD ---
+2025-12-17 10:21:17,869 | INFO | read_data | Datos cargados exitosamente desde: data/raw
+2025-12-17 10:21:20,158 | INFO | data_quality_input | Ejecutando Comprobación de Calidad de Datos...
+2025-12-17 10:21:20,158 | INFO | data_quality_input | [DQ INPUT APROBADA] Conteo de filas: 379
+2025-12-17 10:21:20,169 | INFO | data_quality_input | [DQ INPUT APROBADA] Todas las columnas requeridas están presentes
+2025-12-17 10:21:20,169 | INFO | transform_data | Eliminando registros duplicados...
+2025-12-17 10:21:20,212 | INFO | transform_data | Aplicando Filtros...
+2025-12-17 10:21:20,571 | INFO | date_filter | Filtro fecha >>> OK
+2025-12-17 10:21:20,571 | INFO | country_filter | Filtro pais >>> OK
+2025-12-17 10:21:20,685 | INFO | delivery_filter | Filtro tipo entrega >>> OK
+2025-12-17 10:21:24,306 | INFO | transform_data | Registros originales: 379 | Registros filtrados: 129
+2025-12-17 10:21:24,397 | INFO | derived_cols | Columnas derivadas de tipo entrega >>> OK
+2025-12-17 10:21:24,465 | INFO | fix_nulls | Rellenado valores nulos >>> OK
+2025-12-17 10:21:24,580 | INFO | treatment_units | Unidad, cantidad y precio ajustadas >>> OK
+2025-12-17 10:21:24,628 | INFO | rename_and_order_cols | Renombrado: 'precio' a 'precio_origen'
+2025-12-17 10:21:24,633 | INFO | rename_and_order_cols | Renombrado: 'cantidad' a 'cantidad_origen'
+2025-12-17 10:21:24,638 | INFO | rename_and_order_cols | Renombrado: 'unidad' a 'unidad_origen'
+2025-12-17 10:21:24,706 | INFO | rename_and_order_cols | Renombrado y ordenamiento de columnas >>> OK
+2025-12-17 10:21:25,763 | INFO | data_quality_output | [DQ OUTPUT APROBADA]: La columna 'precio' no contiene valores nulos.
+2025-12-17 10:21:25,880 | INFO | data_quality_output | [DQ OUTPUT APROBADA]: La columna 'material' no contiene valores nulos.
+2025-12-17 10:21:25,880 | INFO | write_data | Escribiendo datos en: data/processed/PROD
+2025-12-17 10:21:27,870 | INFO | write_data | Escritura exitosa.
+2025-12-17 10:21:28,319 | INFO | main | Sesion Spark detenida
+2025-12-17 10:21:28,319 | INFO | close | Closing down clientserver connection
+2025-12-17 10:21:54,517 | INFO | main | Pipeline de procesamiento de datos iniciado
+2025-12-17 10:21:57,067 | INFO | _init_num_threads | NumExpr defaulting to 8 threads.
+2025-12-17 10:22:02,597 | INFO | setup_environment | --- Sesion Spark iniciada en entorno: DEV ---
+2025-12-17 10:22:04,599 | INFO | read_data | Datos cargados exitosamente desde: data/raw
+2025-12-17 10:22:07,051 | INFO | data_quality_input | Ejecutando Comprobación de Calidad de Datos...
+2025-12-17 10:22:07,052 | INFO | data_quality_input | [DQ INPUT APROBADA] Conteo de filas: 379
+2025-12-17 10:22:07,064 | INFO | data_quality_input | [DQ INPUT APROBADA] Todas las columnas requeridas están presentes
+2025-12-17 10:22:07,065 | INFO | transform_data | Eliminando registros duplicados...
+2025-12-17 10:22:07,114 | INFO | transform_data | Aplicando Filtros...
+2025-12-17 10:22:07,451 | INFO | date_filter | Filtro fecha >>> OK
+2025-12-17 10:22:07,451 | INFO | country_filter | Filtro pais >>> OK
+2025-12-17 10:22:07,552 | INFO | delivery_filter | Filtro tipo entrega >>> OK
+2025-12-17 10:22:11,352 | INFO | transform_data | Registros originales: 379 | Registros filtrados: 129
+2025-12-17 10:22:11,441 | INFO | derived_cols | Columnas derivadas de tipo entrega >>> OK
+2025-12-17 10:22:11,503 | INFO | fix_nulls | Rellenado valores nulos >>> OK
+2025-12-17 10:22:11,596 | INFO | treatment_units | Unidad, cantidad y precio ajustadas >>> OK
+2025-12-17 10:22:11,644 | INFO | rename_and_order_cols | Renombrado: 'precio' a 'precio_origen'
+2025-12-17 10:22:11,650 | INFO | rename_and_order_cols | Renombrado: 'cantidad' a 'cantidad_origen'
+2025-12-17 10:22:11,655 | INFO | rename_and_order_cols | Renombrado: 'unidad' a 'unidad_origen'
+2025-12-17 10:22:11,731 | INFO | rename_and_order_cols | Renombrado y ordenamiento de columnas >>> OK
+2025-12-17 10:22:12,873 | INFO | data_quality_output | [DQ OUTPUT APROBADA]: La columna 'material' no contiene valores nulos.
+2025-12-17 10:22:13,031 | INFO | data_quality_output | [DQ OUTPUT APROBADA]: La columna 'precio' no contiene valores nulos.
+2025-12-17 10:22:13,031 | INFO | write_data | Escribiendo datos en: data/processed/DEV
+2025-12-17 10:22:14,965 | INFO | write_data | Escritura exitosa.
+2025-12-17 10:22:15,300 | INFO | main | Sesion Spark detenida
+2025-12-17 10:22:15,301 | INFO | close | Closing down clientserver connection
+2025-12-17 10:43:54,053 | INFO | main | Pipeline de procesamiento de datos iniciado
+2025-12-17 10:43:56,453 | INFO | _init_num_threads | NumExpr defaulting to 8 threads.
+2025-12-17 10:44:01,193 | INFO | setup_environment | --- Sesion Spark iniciada en entorno: DEV ---
+2025-12-17 10:44:02,921 | INFO | read_data | Datos cargados exitosamente desde: data/raw
+2025-12-17 10:44:05,248 | INFO | data_quality_input | Ejecutando Comprobación de Calidad de Datos...
+2025-12-17 10:44:05,248 | INFO | data_quality_input | [DQ INPUT APROBADA] Conteo de filas: 379
+2025-12-17 10:44:05,259 | INFO | data_quality_input | [DQ INPUT APROBADA] Todas las columnas requeridas están presentes
+2025-12-17 10:44:05,259 | INFO | transform_data | Eliminando registros duplicados...
+2025-12-17 10:44:05,309 | INFO | transform_data | Aplicando Filtros...
+2025-12-17 10:44:05,754 | INFO | date_filter | Filtro fecha >>> OK
+2025-12-17 10:44:05,755 | INFO | country_filter | Filtro pais >>> OK
+2025-12-17 10:44:05,865 | INFO | delivery_filter | Filtro tipo entrega >>> OK
+2025-12-17 10:44:09,198 | INFO | transform_data | Registros originales: 379 | Registros filtrados: 129
+2025-12-17 10:44:09,274 | INFO | derived_cols | Columnas derivadas de tipo entrega >>> OK
+2025-12-17 10:44:09,330 | INFO | fix_nulls | Rellenado valores nulos >>> OK
+2025-12-17 10:44:09,439 | INFO | treatment_units | Unidad, cantidad y precio ajustadas >>> OK
+2025-12-17 10:44:09,482 | INFO | rename_and_order_cols | Renombrado: 'precio' a 'precio_origen'
+2025-12-17 10:44:09,487 | INFO | rename_and_order_cols | Renombrado: 'cantidad' a 'cantidad_origen'
+2025-12-17 10:44:09,491 | INFO | rename_and_order_cols | Renombrado: 'unidad' a 'unidad_origen'
+2025-12-17 10:44:09,562 | INFO | rename_and_order_cols | Renombrado y ordenamiento de columnas >>> OK
+2025-12-17 10:44:10,607 | INFO | data_quality_output | [DQ OUTPUT APROBADA]: La columna 'precio' no contiene valores nulos.
+2025-12-17 10:44:10,732 | INFO | data_quality_output | [DQ OUTPUT APROBADA]: La columna 'material' no contiene valores nulos.
+2025-12-17 10:44:10,733 | INFO | write_data | Escribiendo datos en: data/processed/DEV
+2025-12-17 10:44:12,714 | INFO | write_data | Escritura exitosa.
+2025-12-17 10:44:12,860 | INFO | main | Sesion Spark detenida
+2025-12-17 10:44:12,860 | INFO | close | Closing down clientserver connection
+2025-12-17 10:45:48,018 | INFO | main | Pipeline de procesamiento de datos iniciado
+2025-12-17 10:45:50,412 | INFO | _init_num_threads | NumExpr defaulting to 8 threads.
+2025-12-17 10:45:55,219 | INFO | setup_environment | --- Sesion Spark iniciada en entorno: PROD ---
+2025-12-17 10:45:56,948 | INFO | read_data | Datos cargados exitosamente desde: data/raw
+2025-12-17 10:45:59,219 | INFO | data_quality_input | Ejecutando Comprobación de Calidad de Datos...
+2025-12-17 10:45:59,219 | INFO | data_quality_input | [DQ INPUT APROBADA] Conteo de filas: 379
+2025-12-17 10:45:59,231 | INFO | data_quality_input | [DQ INPUT APROBADA] Todas las columnas requeridas están presentes
+2025-12-17 10:45:59,232 | INFO | transform_data | Eliminando registros duplicados...
+2025-12-17 10:45:59,285 | INFO | transform_data | Aplicando Filtros...
+2025-12-17 10:45:59,615 | INFO | date_filter | Filtro fecha >>> OK
+2025-12-17 10:45:59,615 | INFO | country_filter | Filtro pais >>> OK
+2025-12-17 10:45:59,712 | INFO | delivery_filter | Filtro tipo entrega >>> OK
+2025-12-17 10:46:03,062 | INFO | transform_data | Registros originales: 379 | Registros filtrados: 129
+2025-12-17 10:46:03,137 | INFO | derived_cols | Columnas derivadas de tipo entrega >>> OK
+2025-12-17 10:46:03,195 | INFO | fix_nulls | Rellenado valores nulos >>> OK
+2025-12-17 10:46:03,310 | INFO | treatment_units | Unidad, cantidad y precio ajustadas >>> OK
+2025-12-17 10:46:03,357 | INFO | rename_and_order_cols | Renombrado: 'precio' a 'precio_origen'
+2025-12-17 10:46:03,362 | INFO | rename_and_order_cols | Renombrado: 'cantidad' a 'cantidad_origen'
+2025-12-17 10:46:03,367 | INFO | rename_and_order_cols | Renombrado: 'unidad' a 'unidad_origen'
+2025-12-17 10:46:03,428 | INFO | rename_and_order_cols | Renombrado y ordenamiento de columnas >>> OK
+2025-12-17 10:46:04,481 | INFO | data_quality_output | [DQ OUTPUT APROBADA]: La columna 'precio' no contiene valores nulos.
+2025-12-17 10:46:04,592 | INFO | data_quality_output | [DQ OUTPUT APROBADA]: La columna 'material' no contiene valores nulos.
+2025-12-17 10:46:04,593 | INFO | write_data | Escribiendo datos en: data/processed/PROD
+2025-12-17 10:46:06,610 | INFO | write_data | Escritura exitosa.
+2025-12-17 10:46:06,997 | INFO | main | Sesion Spark detenida
+2025-12-17 10:46:06,997 | INFO | close | Closing down clientserver connection

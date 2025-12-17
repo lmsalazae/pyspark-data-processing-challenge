@@ -1,8 +1,36 @@
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import col, to_date, lit, when, upper, count, round, input_file_name, regexp_extract
+from pyspark.sql.types import StructType, StructField, StringType, DoubleType, IntegerType
 from omegaconf import OmegaConf
+import logging
 import sys
 import os
+
+logger = None
+
+def setup_logging(conf: OmegaConf) -> logging.Logger:
+    """
+    Configura el sistema de logging de Python basado en los parámetros de configuracion.
+    """
+    log_config = conf.logging
+    log_file = log_config.log_file
+    log_level = log_config.log_level.upper()
+    # Creacion de directorio log
+    log_dir = os.path.dirname(log_file)
+    if log_dir:
+        os.makedirs(log_dir, exist_ok=True)
+    # Configuración del Formato del Log
+    log_format = '%(asctime)s | %(levelname)s | %(funcName)s | %(message)s'
+    # Configuración del Handler
+    logging.basicConfig(
+        level=getattr(logging, log_level, logging.INFO),
+        format=log_format,
+        handlers=[
+            logging.FileHandler(log_file, mode='a'), 
+            logging.StreamHandler(sys.stdout)
+        ]
+    )
+    return logging.getLogger(__name__)
 
 def setup_environment(conf: OmegaConf) -> SparkSession:
     """
@@ -13,8 +41,8 @@ def setup_environment(conf: OmegaConf) -> SparkSession:
         .appName(app_name) \
         .master(conf.environment.master) \
         .getOrCreate()
-    spark.sparkContext.setLogLevel("ERROR")
-    print(f"--- Sesión Spark iniciada en entorno: {conf.environment.name} ---")
+    spark.sparkContext.setLogLevel("INFO")
+    logger.info(f"--- Sesion Spark iniciada en entorno: {conf.environment.name} ---")
     return spark
 
 def read_data(spark: SparkSession, conf: OmegaConf) -> DataFrame:
@@ -24,18 +52,39 @@ def read_data(spark: SparkSession, conf: OmegaConf) -> DataFrame:
     data_config = conf.input_data
     file_path = data_config.file_path
     add_field_file = conf.additional_fields.file
+    # Configurando el schema con los datos de la configuracion
+    spark_types_mapping = {
+        "string": StringType(),
+        "double": DoubleType(),
+        "integer": IntegerType()
+    }
+    schema_fields = []
+    for field in data_config.schema.fields:
+        dtype = spark_types_mapping.get(field.type.lower())
+        if not dtype:
+            raise ValueError(f"Tipo de datos desconocido en config.yaml: {field.type}")
+        schema_fields.append(
+            StructField(
+                field.name, 
+                dtype, 
+                field.nullable
+            )
+        )
+    explicit_schema = StructType(schema_fields)
+    # Lectura de datos fuente
     try:
         df = spark.read \
             .format(data_config.file_format) \
             .options(**data_config.options) \
+            .schema(explicit_schema) \
             .load(file_path)
         # Captura de nombre de archivo
         df = df.withColumn(add_field_file, input_file_name())
         df = df.withColumn(add_field_file, regexp_extract(col(add_field_file), r'[^/]+$', 0))
-        print(f"Datos cargados exitosamente desde: {file_path}")
+        logger.info(f"Datos cargados exitosamente desde: {file_path}")
         return df
     except Exception as e:
-        print(f"ERROR: No se pudo cargar datos: {file_path}. Deteniendo Spark. {e}")
+        logger.error(f"ERROR: No se pudo cargar datos: {file_path}. Deteniendo Spark. {e}")
         spark.stop()
         sys.exit(1)
 
@@ -50,7 +99,7 @@ def date_filter(df: DataFrame, conf: OmegaConf) -> DataFrame:
         ((col(date_col) >= lit(start_date).cast("date")) & 
         (col(date_col) <= lit(end_date).cast("date")))
     )
-    print('Filtro fecha >>> OK')
+    logger.info('Filtro fecha >>> OK')
     return df_filtered
 
 def country_filter(df: DataFrame, conf: OmegaConf) -> DataFrame:
@@ -63,7 +112,7 @@ def country_filter(df: DataFrame, conf: OmegaConf) -> DataFrame:
         df_filtered = df
     else:
         df_filtered = df.filter(col(country_col) == lit(country_val))
-    print('Filtro pais >>> OK')
+    logger.info('Filtro pais >>> OK')
     return df_filtered
 
 def delivery_filter(df: DataFrame, conf: OmegaConf) -> DataFrame:
@@ -83,8 +132,7 @@ def delivery_filter(df: DataFrame, conf: OmegaConf) -> DataFrame:
             upper(col(delivery_col2)).isin(condition_filter_col2)
     )
     df_filtered = df_filtered1.unionByName(df_filtered2)
-    print('Filtro tipo entrega >>> OK')
-    # df_filtered.show()
+    logger.info('Filtro tipo entrega >>> OK')
     return df_filtered
 
 def derived_cols(df: DataFrame, conf: OmegaConf) -> DataFrame:
@@ -109,8 +157,7 @@ def derived_cols(df: DataFrame, conf: OmegaConf) -> DataFrame:
         when(upper(col(delivery_col2)).isin(condition_filter_col2) , lit(1))
         .otherwise(lit(0))
     )
-    print("Columnas derivadas de tipo entrega >>> OK")
-    # df_rules.show(100)
+    logger.info("Columnas derivadas de tipo entrega >>> OK")
     return df_rules
 
 def fix_nulls(df: DataFrame, conf: OmegaConf) -> DataFrame:
@@ -129,7 +176,7 @@ def fix_nulls(df: DataFrame, conf: OmegaConf) -> DataFrame:
         value=replace_num_value, 
         subset=num_cols
     )
-    print("Rellenado valores nulos >>> OK")
+    logger.info("Rellenado valores nulos >>> OK")
     return df_fill
 
 def treatment_units(df: DataFrame, conf: OmegaConf) -> DataFrame:
@@ -161,7 +208,7 @@ def treatment_units(df: DataFrame, conf: OmegaConf) -> DataFrame:
         unit_new_name, 
         lit(unit_new_value)
     )
-    print("Unidad, cantidad y precio ajustadas >>> OK")
+    logger.info("Unidad, cantidad y precio ajustadas >>> OK")
     return df_fix
 
 def rename_and_order_cols(df: DataFrame, conf: OmegaConf) -> DataFrame:
@@ -175,14 +222,14 @@ def rename_and_order_cols(df: DataFrame, conf: OmegaConf) -> DataFrame:
         if column in columns_rename:
             new_name = columns_rename[column]
             select_expressions.append(col(column).alias(new_name))
-            print(f"Renombrado: '{column}' a '{new_name}'")
+            logger.info(f"Renombrado: '{column}' a '{new_name}'")
         else:
             select_expressions.append(col(column))
     df_rename = df.select(*select_expressions)
     # Ordenamiento de las columnas
     columns_order = list(conf.columns_config.columns_order)
     df_ordered = df_rename.select(*columns_order)
-    print("Renombrado y ordenamiento de columnas >>> OK")
+    logger.info("Renombrado y ordenamiento de columnas >>> OK")
     return df_ordered
 
 def transform_data(df: DataFrame, conf: OmegaConf) -> DataFrame:
@@ -191,18 +238,18 @@ def transform_data(df: DataFrame, conf: OmegaConf) -> DataFrame:
     """
     date_col = conf.run_parameters.date_filter_column
     # Eliminando registros duplicados
-    print("Eliminando registros duplicados...")
+    logger.info("Eliminando registros duplicados...")
     df_dedup = df.dropDuplicates()
     # Conversión de fecha (asumiendo formato yyyyMMdd)
     df_formated = df_dedup.withColumn(date_col, to_date(col(date_col), "yyyyMMdd"))
-    print("Aplicando Filtros...")
+    logger.info("Aplicando Filtros...")
     # Filtro rango de fechas
     df_date = date_filter(df_formated, conf)
     # Filtro país
     df_country = country_filter(df_date, conf)
     # Filtro tipo_entrega
     df_delivery = delivery_filter(df_country, conf)
-    print(f"Registros originales: {df.count()} | Registros filtrados: {df_delivery.count()}")
+    logger.info(f"Registros originales: {df.count()} | Registros filtrados: {df_delivery.count()}")
     # Creacion nuevas columnas
     new_df = derived_cols(df_delivery, conf)
     # Rellenado de valores nulos
@@ -225,23 +272,23 @@ def data_quality_input(df: DataFrame, conf: OmegaConf) -> bool:
     # Cantidad minima de registros esperados
     actual_rows = df.count()
     min_expected = dq_config.min_expected_rows
-    print("Ejecutando Comprobación de Calidad de Datos...")
+    logger.info("Ejecutando Comprobación de Calidad de Datos...")
     result_dq = []
     if actual_rows < min_expected:
-        print(f"[DQ INPUT FALLIDA] Conteo bajo: {actual_rows} filas. Se esperaban al menos {min_expected}")
+        logger.error(f"[DQ INPUT FALLIDA] Conteo bajo: {actual_rows} filas. Se esperaban al menos {min_expected}")
         result_dq.append(False)
     else:
-        print(f"[DQ INPUT APROBADA] Conteo de filas: {actual_rows}")
+        logger.info(f"[DQ INPUT APROBADA] Conteo de filas: {actual_rows}")
         result_dq.append(True)
     # Columnas requeridas
     actual_columns = set(df.columns)
     required_columns = set(dq_config.required_columns)
     missing_columns = required_columns - actual_columns
     if missing_columns:
-        print(f"[DQ INPUT FALLIDA] Columnas faltantes: {missing_columns}")
+        logger.error(f"[DQ INPUT FALLIDA] Columnas faltantes: {missing_columns}")
         result_dq.append(False)
     else:
-        print("[DQ INPUT APROBADA] Todas las columnas requeridas están presentes")
+        logger.info("[DQ INPUT APROBADA] Todas las columnas requeridas están presentes")
         result_dq.append(True)
     result = False in result_dq
     return not result
@@ -257,10 +304,10 @@ def data_quality_output(df: DataFrame, conf: OmegaConf) -> bool:
     for col_name in not_nulls_cols:
         null_count = df.filter(col(col_name).isNull()).count()
         if null_count > 0:
-            print(f"[DQ OUTPUT FALLIDA]: La columna '{col_name}' contiene {null_count} valores nulos.")
+            logger.error(f"[DQ OUTPUT FALLIDA]: La columna '{col_name}' contiene {null_count} valores nulos.")
             result_dq.append(False)
         else:
-            print(f"[DQ OUTPUT APROBADA]: La columna '{col_name}' no contiene valores nulos.")
+            logger.info(f"[DQ OUTPUT APROBADA]: La columna '{col_name}' no contiene valores nulos.")
             result_dq.append(True)
     result = False in result_dq
     return not result
@@ -271,25 +318,29 @@ def write_data(df: DataFrame, conf: OmegaConf) -> None:
     """
     partition_cols = conf.run_parameters.partition_columns
     output_path = os.path.join(conf.run_parameters.output_base_path,conf.environment.name)
-    print(f"Escribiendo datos en: {output_path}")
+    logger.info(f"Escribiendo datos en: {output_path}")
     try:
         df.write \
             .mode("overwrite") \
             .partitionBy(*partition_cols) \
             .parquet(output_path)
-        print(f"Escritura exitosa.")
+        logger.info(f"Escritura exitosa.")
     except Exception as e:
-        print(f"ERROR: No se pudo escribir el resultado: {e}")
+        logger.error(f"ERROR: No se pudo escribir el resultado: {e}")
         raise 
 
 def main() -> None:
     """
     Funcion principal que orquesta el pipeline de datos.
     """
+    global logger
     spark = None
     try:
         # Cargar la configuración
         conf = OmegaConf.load("config.yaml")
+        # Inicializar el logger 
+        logger = setup_logging(conf)
+        logger.info("Pipeline de procesamiento de datos iniciado")
         # Inicializacion
         spark = setup_environment(conf)
         # Lectura
@@ -303,16 +354,16 @@ def main() -> None:
                 # Escritura (Solo si DQ es APROBADA)
                 write_data(df_processed, conf)
             else:
-                print("ERROR: Se encontró una falla en la Calidad de Datos de salida")
+                logger.error("ERROR: Se encontró una falla en la Calidad de Datos de salida")
         else:
-            print("ERROR: Se encontró una falla en la Calidad de Datos de entrada")
+            logger.error("ERROR: Se encontró una falla en la Calidad de Datos de entrada")
     except Exception as e:
-        print(f"ERROR FATAL en el pipeline: {e}")
+        logger.critical(f"ERROR FATAL en el pipeline: {e}")
         sys.exit(1)
     finally:
         if spark:
             spark.stop()
-            print("Sesion Spark detenida")
+            logger.info("Sesion Spark detenida")
 
 if __name__ == "__main__":
     main()

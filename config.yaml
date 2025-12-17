@@ -21,7 +21,36 @@ input_data:
   file_format: "csv"
   options:
     header: True
-    inferSchema: True
+    # inferSchema: True
+  schema:
+    fields:
+      - name: "pais"
+        type: "string"
+        nullable: true
+      - name: "fecha_proceso"
+        type: "string"
+        nullable: true
+      - name: "transporte"
+        type: "integer"
+        nullable: true
+      - name: "ruta"
+        type: "integer"
+        nullable: true
+      - name: "tipo_entrega"
+        type: "string"
+        nullable: true
+      - name: "material"
+        type: "string"
+        nullable: true
+      - name: "precio"
+        type: "double"
+        nullable: true
+      - name: "cantidad"
+        type: "double"
+        nullable: true
+      - name: "unidad"
+        type: "string"
+        nullable: true
 
 # PARAMETROS DE CALIDAD DE DATOS 
 data_quality:
@@ -106,3 +135,8 @@ columns_config:
     precio: "precio_origen"
     cantidad: "cantidad_origen"
     unidad: "unidad_origen"
+
+# CONFIGURACION DE LOGGING
+logging:
+  log_file: "logs/pipeline_execution.log"
+  log_level: "INFO"
