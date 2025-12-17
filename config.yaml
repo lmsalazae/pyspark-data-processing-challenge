@@ -1,6 +1,6 @@
 # CONFIGURACION DEL ENTORNO
 environment:
-  name: "DEV" # DEV, QA, PROD
+  name: "PROD" # DEV, QA, PROD
   master: "local[*]" 
 
 # PARAMETROS DE EJECUCION DEL JOB
