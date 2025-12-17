@@ -154,7 +154,7 @@ def treatment_units(df: DataFrame, conf: OmegaConf) -> DataFrame:
     )
     df_fix = df_fix.withColumn(
         price_new_name, 
-        when(upper(col(unit_name)) == unit_value , round(col(price_name)/unit_factor,2))
+        when(upper(col(unit_name)) == unit_value , round(col(price_name)/col(quantity_new_name),2))
         .otherwise(col(price_name))
     )
     df_fix = df_fix.withColumn(

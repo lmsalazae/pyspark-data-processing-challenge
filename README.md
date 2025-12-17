@@ -1,5 +1,5 @@
 # Pipeline de Procesamiento de Datos PySpark
-Este desarrollo de PySpark implementa un pipeline ETL (Extract, Transform, Load) para procesar datos, utilizando un archivo de configuración en formato YAML para gestionar parámetros de entorno, ejecución, entrada/salida y reglas de negocio.
+Este desarrollo de PySpark implementa un pipeline ETL (Extract, Transform, Load) para procesar datos, utilizando un archivo de configuración en formato YAML y el paquete OmegaConf para gestionar parámetros de entorno, ejecución, entrada/salida y reglas de negocio.
 
 ## Estructura y Elementos del Archivo de Configuración (config.yaml) (H2)
 El archivo config.yaml es el corazón del pipeline, ya que define todos los parámetros y reglas que guían el procesamiento de los datos.
@@ -89,10 +89,12 @@ Reglas para la estandarización de unidades (conversión).
 
 	* new_value: Nueva unidad estandarizada (ej. "ST").
 
-	* factor: Factor de conversión aplicado a cantidad (multiplicación) y precio (división).
+	* factor: Factor de conversión aplicado a cantidad y precio.
 
 ### PARAMETROS DE NUEVAS COLUMNAS PROPUESTAS (additional_fields)
-Define los nombres de columnas adicionales que se añadirán.
+Define los nombres de columnas adicionales que se proponen como datos utiles.
+El nombre de archivo sirve para auditoria y linaje de datos.
+El total precalcula una operacion bastante util con los campos calculados previamente.
 
 	* total: Nombre para la columna de cálculo de total (ej. "total_estandar").
 
@@ -100,10 +102,12 @@ Define los nombres de columnas adicionales que se añadirán.
 
 ### PARAMETROS DE ORDENAMIENTO DE COLUMNAS (columns_config)
 Define cómo deben quedar las columnas en la salida.
+Se proponen nuevos nombres para algunas columnas, de tal manera que todo el dataset se puede entender mejor.
+Se propone tambien un nuevo orden en las columnas del dataset con el mismo objetivo.
 
 	* columns_order: Lista que especifica el orden final de las columnas.
 
-	* columns_rename: Mapeo de columnas para renombrar (utilizado para preservar el valor original antes de la estandarización).
+	* columns_rename: Mapeo de columnas para renombrar (campos utilizados para preservar el valor original antes de la estandarizacion).
 
 ## Descripción de Funciones del Script PySpark (data_process.py)
 El script está modularizado en funciones, cada una con una responsabilidad específica dentro del pipeline.
@@ -126,7 +130,7 @@ Tarea: Carga los datos de entrada desde la ruta especificada.
 
 	* Lee los datos basándose en la configuración de input_data (ruta, formato, opciones).
 
-	* Añade una columna (cuyo nombre se define en additional_fields.file) para capturar el nombre del archivo de origen (input_file_name()), extrayendo solo el nombre del archivo de la ruta completa mediante regex.
+	* Añade una columna (cuyo nombre se define en additional_fields.file) para capturar el nombre del archivo de origen (input_file_name()), extrayendo solo el nombre del archivo de la ruta completa usando regex.
 
 ### 3. data_quality_input(df: DataFrame, conf: OmegaConf) -> bool
 Tarea: Ejecuta las validaciones de calidad de datos para la entrada.
@@ -184,7 +188,7 @@ Tarea: Orquesta y aplica la secuencia completa de transformaciones y reglas de n
 
 			* cantidad_estandar = cantidad_origen * factor.
 
-			* precio_estandar = precio_origen / factor.
+			* precio_estandar = precio_origen / (cantidad_origen * factor) o cantidad_estandar.
 
 		- Establece la unidad_estandar al new_value (ej. "ST").
 
@@ -206,7 +210,7 @@ Tarea: Escribe el DataFrame procesado en la ubicación de salida.
 
 	* Escribe los datos en modo "overwrite".
 
-	* Utiliza el formato Parquet.
+	* Utiliza el formato Parquet que es un formato nativo para pyspark y además es eficiente para la lectura.
 
 	* Particiona los datos según las columnas definidas en partition_columns.
 
