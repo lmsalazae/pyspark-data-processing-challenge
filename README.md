@@ -1,7 +1,7 @@
 # Pipeline de Procesamiento de Datos PySpark
 Este desarrollo de PySpark implementa un pipeline ETL (Extract, Transform, Load) para procesar datos, utilizando un archivo de configuracion en formato YAML y el paquete OmegaConf para gestionar parámetros de entorno, ejecucion, entrada/salida y reglas de negocio.
 
-## Estructura y Elementos del Archivo de Configuracion (config.yaml) (H2)
+## Estructura y Elementos del Archivo de Configuracion (config.yaml) 
 El archivo config.yaml es el corazon del pipeline, ya que define todos los parámetros y reglas que guían el procesamiento de los datos.
 
 ### CONFIGURACION DEL ENTORNO (environment)
@@ -221,7 +221,7 @@ Tarea: Orquesta y aplica la secuencia completa de transformaciones y reglas de n
 ### 6. data_quality_output(df: DataFrame, conf: OmegaConf) -> bool
 Tarea: Ejecuta las validaciones de calidad de datos para la salida.
 
-#### Acciones Clave: (H4)
+#### Acciones Clave:
 
 	* Verifica que las columnas listadas en data_quality.output.not_nulls no contengan ningún valor nulo después de las transformaciones.
 
